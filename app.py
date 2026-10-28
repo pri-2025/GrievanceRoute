@@ -15,6 +15,7 @@ import pandas as pd
 from grievanceroute.services.ui_theme import apply_custom_theme, render_hero
 from grievanceroute.services.prediction_service import PredictionService
 from grievanceroute.database.repository import GrievanceRepository
+from grievanceroute.components.voice_input import render_voice_input
 
 
 st.set_page_config(
@@ -75,26 +76,51 @@ with c4:
 st.divider()
 
 # Interactive Instant Triage Card
-st.subheader("⚡ Quick Civic Complaint Triage")
-st.markdown("Test the trained NLP and regression models on free-text citizen grievances with automated safety overrides.")
+st.subheader("⚡ Quick Civic Complaint Triage (Speech & Text)")
+st.markdown("Test the trained NLP and regression models on English, Hindi, and Marathi citizen grievances with automatic safety overrides.")
 
 SAMPLE_COMPLAINTS = [
     "Dangerous live electrical wire hanging over the road near FC Road, sparking violently!",
     "Large deep pothole on the main bus lane near Karve Road causing frequent two wheeler falls.",
     "Main drinking water pipeline burst in Shivajinagar colony, water flooding entire street for two days.",
     "Huge pile of uncollected garbage rotting and stinking near municipal school gate in Hadapsar.",
+    "रस्त्यावर खूप मोठा खड्डा पडला आहे आणि वाहने घसरून अपघात होत आहेत (Marathi - Pothole)",
+    "विजेची जिवंत तार रस्त्यावर तुटून पडली आहे आणि ठिणग्या उडत आहेत (Marathi - Live Wire Hazard)",
+    "मुख्य पीने के पानी की पाइपलाइन फट गई है और सड़क पर पानी बह रहा है (Hindi - Water Leak)",
+    "सड़क पर बहुत कचरा फैला हुआ है और भयंकर बदबू आ रही है (Hindi - Garbage)",
 ]
+
+# Multilingual Voice-to-Text widget for Quick Triage
+with st.expander("🎙️ **Voice Recognition Input (English / हिन्दी / मराठी)**", expanded=False):
+    st.caption("Press the microphone below to speak your complaint. The transcribed text will populate the triage text box.")
+    v_event = render_voice_input(key="quick_triage_mic")
+    if v_event:
+        if v_event.get("is_clear"):
+            st.session_state["quick_triage_val"] = ""
+            st.session_state["last_quick_voice"] = ""
+            st.rerun()
+        elif v_event.get("transcript"):
+            v_transcript = v_event["transcript"].strip()
+            if v_transcript and v_transcript != st.session_state.get("last_quick_voice"):
+                st.session_state["last_quick_voice"] = v_transcript
+                st.session_state["quick_triage_val"] = v_transcript
+                st.toast(f"Transcribed {v_event.get('language_name', 'speech')}: populated into triage box!", icon="🎙️")
+                st.rerun()
 
 col_in, col_out = st.columns([1.2, 1])
 
 with col_in:
     sample_choice = st.selectbox("Or choose a pre-configured sample:", ["Custom Text..."] + SAMPLE_COMPLAINTS)
-    default_text = "" if sample_choice == "Custom Text..." else sample_choice
+    if sample_choice != "Custom Text...":
+        default_text = sample_choice.split(" (")[0]
+        st.session_state["quick_triage_val"] = default_text
+    
+    current_val = st.session_state.get("quick_triage_val", "")
     user_input = st.text_area(
-        "Enter Complaint Text (English / Hinglish):",
-        value=default_text,
+        "Enter Complaint Text (English / Hindi / Marathi):",
+        value=current_val,
         height=140,
-        placeholder="e.g. Sadak par bahut bada gaddha hai, vehicles are getting damaged near Balgandharva..."
+        placeholder="e.g. Sadak par bahut bada gaddha hai, or speak in Marathi / Hindi / English..."
     )
     run_btn = st.button("🚀 Analyze Complaint", type="primary", use_container_width=True)
 
@@ -117,8 +143,9 @@ with col_out:
             urgency = result["urgency_score"]
             res_hrs = result["estimated_resolution_hours"]
             crew = result["crew_required"]
+            lang = result.get("detected_language", "English")
 
-            st.markdown(f"**Predicted Category:** `{cat}`")
+            st.markdown(f"**Predicted Category:** `{cat}` • **Language:** `{lang}`")
             st.progress(result["confidence"], text=f"Model Confidence: {conf:.1f}%")
             
             c_u1, c_u2 = st.columns(2)
@@ -132,7 +159,8 @@ with col_out:
                 st.markdown(f"**Est. Resolution:** `{res_hrs:.1f} hours`")
                 st.markdown(f"**Assigned Crew:** `{crew}`")
     else:
-        st.info("Enter or select a complaint on the left and click **Analyze Complaint** to test real-time classification, urgency regression, and safety overrides.")
+        st.info("Enter or speak a complaint on the left and click **Analyze Complaint** to test real-time classification, urgency regression, and safety overrides.")
+
 
 st.divider()
 

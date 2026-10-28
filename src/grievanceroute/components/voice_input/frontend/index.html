@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voice Input Component</title>
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --card-border: rgba(148, 163, 184, 0.2);
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --accent: #06b6d4;
+      --danger: #ef4444;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background-color: transparent;
+      color: var(--text-main);
+      padding: 6px;
+      overflow: hidden;
+    }
+
+    .voice-card {
+      background: linear-gradient(145deg, #1e293b, #0f172a);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 16px 20px;
+      box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.35);
+      position: relative;
+    }
+
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .title-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .title-text {
+      font-size: 15px;
+      font-weight: 700;
+      color: #e2e8f0;
+      letter-spacing: -0.01em;
+    }
+
+    .badge-pill {
+      font-size: 11px;
+      font-weight: 600;
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+
+    /* Language Switcher */
+    .lang-switcher {
+      display: flex;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 10px;
+      padding: 3px;
+      gap: 3px;
+    }
+
+    .lang-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .lang-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .lang-btn.active {
+      background: linear-gradient(135deg, #2563eb, #0ea5e9);
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+    }
+
+    /* Mic & Recording Zone */
+    .record-zone {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 14px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      border-radius: 12px;
+      padding: 12px 16px;
+    }
+
+    .mic-button {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      border: none;
+      outline: none;
+      background: linear-gradient(135deg, #3b82f6, #06b6d4);
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 14px rgba(6, 182, 212, 0.35);
+      flex-shrink: 0;
+    }
+
+    .mic-button:hover {
+      transform: scale(1.06);
+      box-shadow: 0 6px 20px rgba(6, 182, 212, 0.5);
+    }
+
+    .mic-button.recording {
+      background: linear-gradient(135deg, #ef4444, #f97316);
+      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+      animation: pulse-ring 1.4s infinite cubic-bezier(0.66, 0, 0, 1);
+    }
+
+    @keyframes pulse-ring {
+      0% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+      }
+      70% {
+        box-shadow: 0 0 0 16px rgba(239, 68, 68, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+      }
+    }
+
+    .mic-icon {
+      width: 26px;
+      height: 26px;
+      fill: currentColor;
+      transition: transform 0.2s ease;
+    }
+
+    .status-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #94a3b8;
+    }
+
+    .status-dot.active {
+      background: #ef4444;
+      animation: blink 1s infinite alternate;
+    }
+
+    .status-dot.ready {
+      background: #10b981;
+    }
+
+    @keyframes blink {
+      from { opacity: 0.3; }
+      to { opacity: 1; }
+    }
+
+    .status-subtext {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Wave visualizer */
+    .audio-waves {
+      display: none;
+      align-items: center;
+      gap: 4px;
+      height: 24px;
+      margin-left: auto;
+    }
+
+    .audio-waves.active {
+      display: flex;
+    }
+
+    .wave-bar {
+      width: 4px;
+      background: linear-gradient(to top, #0ea5e9, #38bdf8);
+      border-radius: 2px;
+      animation: sound-wave 0.9s infinite ease-in-out alternate;
+    }
+
+    .wave-bar:nth-child(1) { height: 10px; animation-delay: 0.1s; }
+    .wave-bar:nth-child(2) { height: 20px; animation-delay: 0.3s; }
+    .wave-bar:nth-child(3) { height: 14px; animation-delay: 0.2s; }
+    .wave-bar:nth-child(4) { height: 22px; animation-delay: 0.4s; }
+    .wave-bar:nth-child(5) { height: 12px; animation-delay: 0.15s; }
+
+    @keyframes sound-wave {
+      0% { height: 6px; }
+      100% { height: 24px; }
+    }
+
+    /* Preview box */
+    .preview-box {
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      border-radius: 10px;
+      padding: 12px 14px;
+      min-height: 58px;
+      font-size: 13.5px;
+      line-height: 1.5;
+      color: #f1f5f9;
+      word-wrap: break-word;
+      margin-bottom: 12px;
+      position: relative;
+    }
+
+    .preview-placeholder {
+      color: #64748b;
+      font-style: italic;
+      user-select: none;
+    }
+
+    .interim-text {
+      color: #38bdf8;
+      font-style: italic;
+    }
+
+    .preview-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 6px;
+      font-size: 11px;
+      color: #64748b;
+    }
+
+    /* Actions */
+    .actions-row {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 600;
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: linear-gradient(135deg, #1d4ed8, #1e40af);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: rgba(148, 163, 184, 0.12);
+      color: #cbd5e1;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: rgba(148, 163, 184, 0.22);
+      color: #ffffff;
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    /* Alert Banner */
+    .alert-banner {
+      display: none;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      margin-bottom: 12px;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .alert-banner.error {
+      display: flex;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #fca5a5;
+    }
+
+    .alert-banner.warning {
+      display: flex;
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      color: #fcd34d;
+    }
+  </style>
+</head>
+<body>
+
+<div class="voice-card" id="voiceCard">
+  <!-- Top Row: Title + Language Switcher -->
+  <div class="header-row">
+    <div class="title-group">
+      <span style="font-size: 18px;">🎙️</span>
+      <span class="title-text">Multilingual Voice Submission</span>
+      <span class="badge-pill">Web Speech API</span>
+    </div>
+    <div class="lang-switcher" id="langSwitcher" role="radiogroup" aria-label="Language selection">
+      <button class="lang-btn active" data-lang="en-IN" id="btn-en">
+        <span>🇬🇧</span> English
+      </button>
+      <button class="lang-btn" data-lang="hi-IN" id="btn-hi">
+        <span>🇮🇳</span> हिन्दी
+      </button>
+      <button class="lang-btn" data-lang="mr-IN" id="btn-mr">
+        <span>🚩</span> मराठी
+      </button>
+    </div>
+  </div>
+
+  <!-- Error / Warning Banner -->
+  <div class="alert-banner" id="alertBanner">
+    <span id="alertIcon">⚠️</span>
+    <span id="alertMessage">Error message</span>
+  </div>
+
+  <!-- Mic & Recording Control Bar -->
+  <div class="record-zone">
+    <button class="mic-button" id="micBtn" title="Click to start / stop voice recording">
+      <svg class="mic-icon" id="micIcon" viewBox="0 0 24 24">
+        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+        <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+      </svg>
+    </button>
+    
+    <div class="status-content">
+      <div class="status-badge">
+        <span class="status-dot ready" id="statusDot"></span>
+        <span id="statusHeading" style="color: #f1f5f9;">Ready to Record</span>
+      </div>
+      <div class="status-subtext" id="statusSubtext">
+        Click microphone and speak in English, Hindi, or Marathi.
+      </div>
+    </div>
+
+    <div class="audio-waves" id="audioWaves" aria-hidden="true">
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+    </div>
+  </div>
+
+  <!-- Live Transcript Preview Box -->
+  <div class="preview-box" id="previewBox">
+    <div id="transcriptContent">
+      <span class="preview-placeholder">Spoken grievance text will transcribe in real time here...</span>
+    </div>
+    <div class="preview-footer">
+      <span id="langIndicator">Language: English (en-IN)</span>
+      <span id="wordCount">0 words</span>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="actions-row">
+    <button class="btn btn-secondary" id="clearBtn" disabled>
+      <span>✕</span> Clear
+    </button>
+    <button class="btn btn-primary" id="transferBtn" disabled>
+      <span>📋</span> Populate Complaint Description
+    </button>
+  </div>
+</div>
+
+<script>
+  // Streamlit Custom Component Zero-Dependency RPC protocol
+  const Streamlit = {
+    setComponentReady: function() {
+      window.parent.postMessage({
+        isStreamlitMessage: true,
+        type: "streamlit:componentReady",
+        apiVersion: 1
+      }, "*");
+    },
+    setFrameHeight: function(height) {
+      window.parent.postMessage({
+        isStreamlitMessage: true,
+        type: "streamlit:setFrameHeight",
+        height: height || document.body.scrollHeight + 10
+      }, "*");
+    },
+    setComponentValue: function(value) {
+      window.parent.postMessage({
+        isStreamlitMessage: true,
+        type: "streamlit:setComponentValue",
+        value: value
+      }, "*");
+    }
+  };
+
+  // State
+  let selectedLang = "en-IN";
+  let isRecording = false;
+  let finalTranscript = "";
+  let interimTranscript = "";
+  let recognition = null;
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  // DOM Elements
+  const micBtn = document.getElementById("micBtn");
+  const micIcon = document.getElementById("micIcon");
+  const statusDot = document.getElementById("statusDot");
+  const statusHeading = document.getElementById("statusHeading");
+  const statusSubtext = document.getElementById("statusSubtext");
+  const audioWaves = document.getElementById("audioWaves");
+  const transcriptContent = document.getElementById("transcriptContent");
+  const langIndicator = document.getElementById("langIndicator");
+  const wordCount = document.getElementById("wordCount");
+  const clearBtn = document.getElementById("clearBtn");
+  const transferBtn = document.getElementById("transferBtn");
+  const alertBanner = document.getElementById("alertBanner");
+  const alertMessage = document.getElementById("alertMessage");
+  const alertIcon = document.getElementById("alertIcon");
+
+  const LANG_NAMES = {
+    "en-IN": "English (India)",
+    "hi-IN": "हिन्दी (Hindi)",
+    "mr-IN": "मराठी (Marathi)"
+  };
+
+  function updateHeight() {
+    setTimeout(() => {
+      Streamlit.setFrameHeight(document.body.scrollHeight + 12);
+    }, 40);
+  }
+
+  // Setup ResizeObserver for dynamic height adjustments
+  if (window.ResizeObserver) {
+    const ro = new ResizeObserver(() => updateHeight());
+    ro.observe(document.body);
+  }
+
+  function showAlert(msg, type = "error") {
+    alertBanner.className = "alert-banner " + type;
+    alertIcon.textContent = type === "error" ? "🔒" : "⚠️";
+    alertMessage.textContent = msg;
+    updateHeight();
+  }
+
+  function hideAlert() {
+    alertBanner.className = "alert-banner";
+    updateHeight();
+  }
+
+  function updateStatus(state, message, subtext) {
+    if (state === "recording") {
+      micBtn.classList.add("recording");
+      statusDot.className = "status-dot active";
+      audioWaves.classList.add("active");
+      statusHeading.textContent = message || "Listening...";
+      statusHeading.style.color = "#ef4444";
+      statusSubtext.textContent = subtext || "Speak clearly. Click button to finish.";
+    } else if (state === "ready") {
+      micBtn.classList.remove("recording");
+      statusDot.className = "status-dot ready";
+      audioWaves.classList.remove("active");
+      statusHeading.textContent = message || "Ready to Record";
+      statusHeading.style.color = "#10b981";
+      statusSubtext.textContent = subtext || "Click microphone to start speaking.";
+    } else if (state === "captured") {
+      micBtn.classList.remove("recording");
+      statusDot.className = "status-dot ready";
+      audioWaves.classList.remove("active");
+      statusHeading.textContent = message || "Speech Captured";
+      statusHeading.style.color = "#38bdf8";
+      statusSubtext.textContent = subtext || "Review transcription and click Populate Description.";
+    } else if (state === "error") {
+      micBtn.classList.remove("recording");
+      statusDot.className = "status-dot";
+      audioWaves.classList.remove("active");
+      statusHeading.textContent = message || "Error";
+      statusHeading.style.color = "#f87171";
+      statusSubtext.textContent = subtext || "Please try again.";
+    }
+  }
+
+  function renderTranscript() {
+    const combined = (finalTranscript + " " + interimTranscript).trim();
+    if (!combined) {
+      transcriptContent.innerHTML = '<span class="preview-placeholder">Spoken grievance text will transcribe in real time here...</span>';
+      wordCount.textContent = "0 words";
+      clearBtn.disabled = true;
+      transferBtn.disabled = true;
+    } else {
+      let html = "";
+      if (finalTranscript) {
+        html += `<span class="final-text">${escapeHtml(finalTranscript)}</span>`;
+      }
+      if (interimTranscript) {
+        html += ` <span class="interim-text">${escapeHtml(interimTranscript)}</span>`;
+      }
+      transcriptContent.innerHTML = html;
+      const count = combined.split(/\s+/).filter(Boolean).length;
+      wordCount.textContent = `${count} word${count === 1 ? '' : 's'}`;
+      clearBtn.disabled = false;
+      transferBtn.disabled = false;
+    }
+    langIndicator.textContent = `Language: ${LANG_NAMES[selectedLang] || selectedLang}`;
+    updateHeight();
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  // Language buttons
+  document.querySelectorAll(".lang-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".lang-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      selectedLang = btn.getAttribute("data-lang");
+      langIndicator.textContent = `Language: ${LANG_NAMES[selectedLang] || selectedLang}`;
+      hideAlert();
+
+      if (isRecording) {
+        stopRecognition();
+        setTimeout(() => startRecognition(), 300);
+      }
+    });
+  });
+
+  // Check Web Speech API Support
+  if (!SpeechRecognition) {
+    showAlert("Browser Speech Recognition is not supported in this browser. Please type manually or use Chrome/Edge.", "warning");
+    micBtn.disabled = true;
+    micBtn.style.opacity = "0.5";
+    micBtn.style.cursor = "not-allowed";
+    updateStatus("error", "Browser Unsupported", "Web Speech API is unavailable in this environment.");
+  } else {
+    initRecognition();
+  }
+
+  function initRecognition() {
+    recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      isRecording = true;
+      hideAlert();
+      updateStatus("recording", `Listening in ${LANG_NAMES[selectedLang]}...`, "Speaking into microphone. Click mic when done.");
+    };
+
+    recognition.onresult = (event) => {
+      interimTranscript = "";
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += (finalTranscript ? " " : "") + event.results[i][0].transcript;
+        } else {
+          interimTranscript += event.results[i][0].transcript;
+        }
+      }
+      renderTranscript();
+    };
+
+    recognition.onerror = (event) => {
+      console.warn("Speech recognition error:", event.error);
+      isRecording = false;
+      if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+        showAlert("Microphone permission was denied. Please allow microphone access in browser settings.", "error");
+        updateStatus("error", "Microphone Denied", "Grant mic permission in browser address bar.");
+      } else if (event.error === "no-speech") {
+        updateStatus("ready", "No Speech Detected", "Please speak louder or closer to the microphone.");
+      } else if (event.error === "network") {
+        showAlert("Network error during speech recognition. Please verify internet connection.", "warning");
+        updateStatus("error", "Network Error", "Browser speech service could not connect.");
+      } else {
+        updateStatus("error", `Recognition Error (${event.error})`, "Click microphone to retry.");
+      }
+    };
+
+    recognition.onend = () => {
+      isRecording = false;
+      if (finalTranscript.trim()) {
+        updateStatus("captured", "Transcription Ready", "Click Populate Complaint Description to transfer.");
+        // Auto transfer on stop for seamless citizen UX
+        sendDataToStreamlit(false);
+      } else {
+        updateStatus("ready", "Ready to Record", "Click microphone to speak in English, Hindi, or Marathi.");
+      }
+    };
+  }
+
+  function startRecognition() {
+    if (!recognition) return;
+    hideAlert();
+    recognition.lang = selectedLang;
+    try {
+      recognition.start();
+    } catch (e) {
+      console.warn("Recognition start error:", e);
+    }
+  }
+
+  function stopRecognition() {
+    if (!recognition) return;
+    try {
+      recognition.stop();
+    } catch (e) {
+      console.warn("Recognition stop error:", e);
+    }
+  }
+
+  // Mic click handler
+  micBtn.addEventListener("click", () => {
+    if (!SpeechRecognition) return;
+    if (isRecording) {
+      stopRecognition();
+    } else {
+      startRecognition();
+    }
+  });
+
+  // Clear button
+  clearBtn.addEventListener("click", () => {
+    finalTranscript = "";
+    interimTranscript = "";
+    renderTranscript();
+    updateStatus("ready", "Cleared", "Ready to record a new grievance description.");
+    sendDataToStreamlit(true); // Notify Streamlit of clear
+  });
+
+  // Transfer button
+  transferBtn.addEventListener("click", () => {
+    sendDataToStreamlit(false);
+  });
+
+  function sendDataToStreamlit(isClear = false) {
+    const textToSend = isClear ? "" : (finalTranscript + (interimTranscript ? " " + interimTranscript : "")).trim();
+    Streamlit.setComponentValue({
+      transcript: textToSend,
+      language: selectedLang,
+      language_name: LANG_NAMES[selectedLang],
+      is_clear: isClear,
+      timestamp: Date.now()
+    });
+  }
+
+  // Notify Streamlit that component is ready
+  Streamlit.setComponentReady();
+  updateHeight();
+
+  // Listen for render messages from Streamlit
+  window.addEventListener("message", (event) => {
+    if (event.data && event.data.type === "streamlit:render") {
+      updateHeight();
+    }
+  });
+</script>
+</body>
+</html>

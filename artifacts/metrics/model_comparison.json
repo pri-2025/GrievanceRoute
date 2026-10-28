@@ -6,8 +6,8 @@
       "weighted_f1": 0.1139,
       "macro_precision": 0.0672,
       "macro_recall": 0.25,
-      "training_time_sec": 0.195,
-      "inference_time_sec": 0.055,
+      "training_time_sec": 0.1137,
+      "inference_time_sec": 0.027,
       "confusion_matrix": [
         [
           0,
@@ -73,8 +73,8 @@
       "weighted_f1": 0.9638,
       "macro_precision": 0.9633,
       "macro_recall": 0.9638,
-      "training_time_sec": 0.3447,
-      "inference_time_sec": 0.0589,
+      "training_time_sec": 0.1645,
+      "inference_time_sec": 0.0265,
       "confusion_matrix": [
         [
           387,
@@ -140,8 +140,8 @@
       "weighted_f1": 0.9638,
       "macro_precision": 0.9633,
       "macro_recall": 0.9638,
-      "training_time_sec": 0.2157,
-      "inference_time_sec": 0.0556,
+      "training_time_sec": 0.1164,
+      "inference_time_sec": 0.0255,
       "confusion_matrix": [
         [
           387,
@@ -207,8 +207,8 @@
       "weighted_f1": 0.9625,
       "macro_precision": 0.962,
       "macro_recall": 0.9625,
-      "training_time_sec": 0.438,
-      "inference_time_sec": 0.0579,
+      "training_time_sec": 0.2659,
+      "inference_time_sec": 0.027,
       "confusion_matrix": [
         [
           387,
@@ -364,7 +364,7 @@
       "r2": -0.043,
       "mean_residual": 0.215,
       "std_residual": 1.0362,
-      "training_time_sec": 0.0349
+      "training_time_sec": 0.0099
     },
     "Linear Regression": {
       "target": "urgency_score",
@@ -374,7 +374,7 @@
       "r2": 0.182,
       "mean_residual": -0.0007,
       "std_residual": 0.9372,
-      "training_time_sec": 0.0403
+      "training_time_sec": 0.0119
     },
     "Random Forest Regressor": {
       "target": "urgency_score",
@@ -384,7 +384,7 @@
       "r2": 0.212,
       "mean_residual": 0.0079,
       "std_residual": 0.9198,
-      "training_time_sec": 1.0612
+      "training_time_sec": 0.7049
     }
   },
   "resolution_regression": {
@@ -396,7 +396,7 @@
       "r2": -0.0001,
       "mean_residual": 0.1116,
       "std_residual": 14.8786,
-      "training_time_sec": 0.0233
+      "training_time_sec": 0.0082
     },
     "Linear Regression": {
       "target": "actual_resolution_hours",
@@ -406,17 +406,17 @@
       "r2": 0.1411,
       "mean_residual": -0.1416,
       "std_residual": 13.788,
-      "training_time_sec": 0.0207
+      "training_time_sec": 0.0091
     },
     "Random Forest Regressor": {
       "target": "actual_resolution_hours",
-      "mae": 11.0085,
-      "mse": 184.4075,
-      "rmse": 13.5797,
-      "r2": 0.167,
-      "mean_residual": -0.1208,
-      "std_residual": 13.5791,
-      "training_time_sec": 0.9712
+      "mae": 11.006,
+      "mse": 184.3422,
+      "rmse": 13.5773,
+      "r2": 0.1673,
+      "mean_residual": -0.1202,
+      "std_residual": 13.5767,
+      "training_time_sec": 0.7022
     }
   }
 }

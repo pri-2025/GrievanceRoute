@@ -15,6 +15,10 @@ from sklearn.pipeline import Pipeline
 
 from grievanceroute.ml.classifier import load_classifier_pipeline
 from grievanceroute.ml.regression import load_regressor_pipeline
+from grievanceroute.services.multilingual_service import (
+    normalize_multilingual_text,
+    MULTILINGUAL_URGENCY_KEYWORDS,
+)
 
 
 ELECTRICAL_HAZARD_KEYWORDS = [
@@ -83,10 +87,15 @@ class PredictionService:
     def predict_complaint(self, text: str, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         Run end-to-end triage prediction on text and context.
-        Applies ML inference and safety-rule escalation.
+        Applies multilingual normalization, ML inference, and safety-rule escalation.
         """
         clean_text = text.strip()
         lower_text = clean_text.lower()
+
+        # Multilingual normalization (English, Hindi, Marathi)
+        multi_info = normalize_multilingual_text(clean_text)
+        triage_text = multi_info["triage_text"]
+        detected_language = multi_info["detected_language"]
 
         # 1. Base ML Category Prediction
         predicted_category = "pothole"
@@ -94,23 +103,32 @@ class PredictionService:
         probabilities: Dict[str, float] = {}
 
         if self.classifier is not None:
-            preds = self.classifier.predict([clean_text])
+            # Use triage_text for classifier inference
+            preds = self.classifier.predict([triage_text])
             predicted_category = preds[0]
             if hasattr(self.classifier, "predict_proba"):
-                probs = self.classifier.predict_proba([clean_text])[0]
+                probs = self.classifier.predict_proba([triage_text])[0]
                 classes = self.classifier.classes_
                 probabilities = {cls: round(float(p), 4) for cls, p in zip(classes, probs)}
                 confidence = float(np.max(probs))
 
-        # 2. Safety Rule Check (Electrical Hazards)
+        # 2. Safety Rule Check (Electrical Hazards in English, Hindi, and Marathi)
         override_applied = False
         warning_msg = None
+
+        # Check English keyword list
         for hazard in ELECTRICAL_HAZARD_KEYWORDS:
             if hazard in lower_text:
                 override_applied = True
                 predicted_category = "streetlight"
                 warning_msg = f"Safety Escalation: '{hazard}' detected. Prioritized for immediate electrical response."
                 break
+
+        # Check Multilingual electrical hazard
+        if not override_applied and multi_info.get("is_electrical_hazard"):
+            override_applied = True
+            predicted_category = "streetlight"
+            warning_msg = multi_info.get("hazard_warning", "Safety Escalation: Electrical hazard detected.")
 
         # 3. Urgency Estimation
         urgency_score = 3
@@ -122,9 +140,12 @@ class PredictionService:
             u_pred = self.urgency_regressor.predict(df_ctx)[0]
             urgency_score = int(np.clip(round(u_pred), 1, 5))
         else:
-            # Keyword fallback
+            # Keyword fallback (English & Multilingual)
             for score, words in URGENCY_KEYWORD_RULES.items():
                 if any(w in lower_text for w in words):
+                    urgency_score = max(urgency_score, score)
+            for score, words in MULTILINGUAL_URGENCY_KEYWORDS.items():
+                if any(w in clean_text or w in triage_text for w in words):
                     urgency_score = max(urgency_score, score)
 
         # 4. Resolution Time Estimation (Hours)
@@ -148,4 +169,7 @@ class PredictionService:
             "urgency_score": urgency_score,
             "estimated_resolution_hours": est_resolution_hours,
             "crew_required": crew_required,
+            "detected_language": detected_language,
+            "triage_text": triage_text,
         }
+

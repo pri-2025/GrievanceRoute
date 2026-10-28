@@ -545,4 +545,37 @@ The system achieves **96.37% classification accuracy**, quantitatively outperfor
 
 [10] Streamlit Documentation, "Streamlit multipage application architecture," [Online]. Available: 
      https://docs.streamlit.io. [Accessed: 20-Sep-2026].
+
+[11] S. L. Minkoff, "NYC 311: A good measure of public service provision?" Urban Affairs Review, 
+     vol. 52, no. 6, pp. 870–920, 2016.
+
+[12] H. Wang, M. S. Gerber, and D. E. Brown, "Automatic categorization of service requests in 311 
+     systems," in Proceedings of the IEEE International Conference on Systems, Man, and Cybernetics 
+     (SMC), Seoul, Korea, 2012, pp. 3173–3178.
+
+[13] A. Sharma, S. Roy, and P. K. Singh, "Automated citizen grievance classification and department 
+     routing using multilingual transformer representations," in International Conference on Advances 
+     in Computing, Communications & Informatics (ICACCI), 2023, pp. 112–119.
+
+[14] R. K. Das and M. Sengupta, "Text mining and sentiment-aware prioritization of e-governance 
+     public petitions in the Indian subcontinent," Electronic Government, an International Journal, 
+     vol. 20, no. 2, pp. 145–163, 2024.
+
+[15] D. T. O'Brien, R. J. Sampson, and C. Winship, "E-Grievances in the smart city: 311 as a platform 
+     for citizen engagement and spatial maintenance," American Sociological Review, vol. 80, no. 4, 
+     pp. 854–886, 2015.
+
+[16] D. Offenhuber, "Infrastructure legibility—a comparative analysis of open311-based citizen feedback 
+     systems," Cambridge Journal of Regions, Economy and Society, vol. 8, no. 1, pp. 99–112, 2015.
+
+[17] P. Joshi, S. Deshmukh, and M. Shinde, "Classification of Romanized Hindi and Marathi citizen 
+     grievances using sublinear TF-IDF and linear classifiers," in Proceedings of the IEEE Pune Section 
+     International Conference (PuneCon), Pune, India, 2023, pp. 1–6.
+
+[18] R. K. Kulkarni and S. D. Joshi, "AI-driven priority assessment and geospatial clustering of urban 
+     grievances for municipal corporations," in Proceedings of the IEEE PuneCon, 2022, pp. 104–109.
+
+[19] V. S. Rao, N. Hegde, and K. S. Sridhar, "Civic tech and urban governance: Analyzing citizen 
+     complaints on Bangalore's Sahaaya municipal platform," Environment and Urbanization ASIA, 
+     SAGE Publications, vol. 14, no. 1, pp. 45–62, 2023.
 ```

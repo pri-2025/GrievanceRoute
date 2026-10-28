@@ -17,6 +17,7 @@ from grievanceroute.services.ui_theme import apply_custom_theme, render_hero
 from grievanceroute.services.complaint_service import ComplaintService
 from grievanceroute.database.repository import GrievanceRepository
 from grievanceroute.data.generator import PUNE_ZONES
+from grievanceroute.components.voice_input import render_voice_input
 
 
 st.set_page_config(page_title="Complaint Management — GrievanceRoute", page_icon="📝", layout="wide")
@@ -24,7 +25,7 @@ apply_custom_theme()
 
 render_hero(
     title="Civic Complaint Intake & Management",
-    subtitle="Submit grievances, trigger automatic NLP triage & regression models, and manage operational lifecycle records.",
+    subtitle="Submit grievances via speech or text, trigger automatic multilingual NLP triage, and manage operational lifecycle records.",
     badge="Unit I & III • Form & Persistence"
 )
 
@@ -35,14 +36,37 @@ tab_submit, tab_explore = st.tabs(["📝 File New Complaint", "🔍 Search & Aud
 
 with tab_submit:
     st.subheader("Citizen Complaint Submission Form")
-    st.markdown("All fields are validated. Upon submission, the AI pipeline categorizes the grievance, predicts urgency, and persists the record into SQLite.")
+    st.markdown("Citizens can report civic issues by **speaking in English, Hindi, or Marathi** or typing directly. The AI pipeline categorizes the grievance, predicts urgency, and persists the record into SQLite.")
+
+    # Multilingual Voice-to-Text Input Widget
+    with st.expander("🎙️ **Voice-to-Text Complaint Input (Click to speak in English / हिन्दी / मराठी)**", expanded=True):
+        st.caption("Select language, press the microphone button, and speak. Transcribed text automatically populates the description field below for review.")
+        voice_event = render_voice_input(key="citizen_voice_mic")
+
+        if voice_event:
+            if voice_event.get("is_clear"):
+                st.session_state["complaint_text_input"] = ""
+                st.session_state["last_transferred_voice"] = ""
+                st.rerun()
+            elif voice_event.get("transcript"):
+                transcript = voice_event["transcript"].strip()
+                last_trans = st.session_state.get("last_transferred_voice")
+                if transcript and transcript != last_trans:
+                    st.session_state["last_transferred_voice"] = transcript
+                    st.session_state["complaint_text_input"] = transcript
+                    lang_name = voice_event.get("language_name", "speech")
+                    st.toast(f"Transcribed {lang_name} populated into description field!", icon="🎙️")
+                    st.rerun()
 
     with st.form("complaint_form", clear_on_submit=False):
         c_text = st.text_area(
             "Complaint Description *",
-            placeholder="Describe the civic issue in detail (e.g. Deep pothole near Balgandharva chowk causing bike accidents...)",
-            height=120,
+            value=st.session_state.get("complaint_text_input", ""),
+            placeholder="Describe the civic issue in detail (e.g. Deep pothole near Balgandharva chowk causing bike accidents...), or speak into the microphone above.",
+            height=130,
+            help="Multilingual input supported (English, Hindi, Marathi). You can freely edit, correct, or augment the recognized speech here before final submission.",
         )
+
 
         col_z, col_lat, col_lon = st.columns(3)
         with col_z:
@@ -99,7 +123,11 @@ with tab_submit:
             with col_res4:
                 st.metric("Assigned Crew", record["crew_required"])
 
+            if record.get("detected_language"):
+                st.info(f"🌐 **Language Detected:** `{record['detected_language']}` • Native text stored in SQLite; multilingual triage applied.")
+
             st.caption(f"Estimated Resolution Time: **{record.get('actual_resolution_hours', 24.0):.1f} hours**. Record stored in SQLite `complaints` table.")
+
 
 with tab_explore:
     st.subheader("Historical Complaints Database Explorer")
